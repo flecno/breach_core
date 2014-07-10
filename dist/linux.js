@@ -25,6 +25,7 @@ var base_name;
 var out_path;
 var tmp_dist_path;
 var out_dist_path;
+var gpg_sign = true;
 
 async.series([
   function(cb_) {
@@ -36,6 +37,11 @@ async.series([
     common.log.out('Using breach_core: ' + module_path);
     common.log.out('Using arch: ' + process.argv[2]);
     common.log.out('Using ExoBrowser: ' + process.argv[3]);
+    common.log.out('Using GPG-Singing: ' + process.argv[4]);
+
+    if (process.argv[4] && process.argv[4] === false) {
+      gpg_sign = false
+    }
 
     base_name = 'breach-v' + package_json.version + '-' + 
       'linux' + '-' + process.argv[2];
@@ -161,25 +167,27 @@ async.series([
   /* Generate signature.                                        */
   /* Warning: `breach` private key required for actual release. */
   function(cb_) {
-    common.log.out('Signature generation: ' + base_name + '.tar.gz.sha1sum.asc');
-    var gpg = require('child_process').spawn('gpg', 
-      ['--armor', '--clearsign', base_name + '.tar.gz.sha1sum'], {
-      cwd: out_path
-    });
-    gpg.stdout.on('data', function(data) {
-      console.log('stdout: ' + data);
-    });
-    gpg.stderr.on('data', function(data) {
-      console.log('stderr: ' + data);
-    });
-    gpg.on('close', function(code) {
-      if(code !== 0) {
-        return cb_(common.err('`gpg` failed with code: ' + code,
-                              'auto_updater:failed_gpg'));
+    if(gpg_sign) {
+      common.log.out('Signature generation: ' + base_name + '.tar.gz.sha1sum.asc');
+      var gpg = require('child_process').spawn('gpg', 
+        ['--armor', '--clearsign', base_name + '.tar.gz.sha1sum'], {
+        cwd: out_path
+      });
+      gpg.stdout.on('data', function(data) {
+        console.log('stdout: ' + data);
+      });
+      gpg.stderr.on('data', function(data) {
+        console.log('stderr: ' + data);
+      });
+      gpg.on('close', function(code) {
+        if(code !== 0) {
+          return cb_(common.err('`gpg` failed with code: ' + code,
+                                'auto_updater:failed_gpg'));
 
-      }
-      return cb_();
-    });
+        }
+        return cb_();
+      });
+    }
   }
 
 ], function(err) {
