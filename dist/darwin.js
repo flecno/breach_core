@@ -24,6 +24,7 @@ var base_name;
 var out_path;
 var tmp_dist_path;
 var out_dist_path;
+var no_gpg_sign = false;
 
 async.series([
   function(cb_) {
@@ -35,6 +36,8 @@ async.series([
     common.log.out('Using breach_core: ' + module_path);
     common.log.out('Using arch: ' + process.argv[2]);
     common.log.out('Using ExoBrowser: ' + process.argv[3]);
+
+    no_gpg_sign = process.argv[4] && process.argv[4] === "true";
 
     base_name = 'breach-v' + package_json.version + '-' + 
       'darwin' + '-' + process.argv[2];
@@ -199,6 +202,9 @@ async.series([
   /* Generate signature.                                        */
   /* Warning: `breach` private key required for actual release. */
   function(cb_) {
+    if(no_gpg_sign) {
+      return;
+    }
     common.log.out('Signature generation: ' + base_name + '.tar.gz.sha1sum.asc');
     var gpg = require('child_process').spawn('gpg', 
       ['--armor', '--clearsign', base_name + '.tar.gz.sha1sum'], {

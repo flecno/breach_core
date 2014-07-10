@@ -12,7 +12,7 @@ install: clean
 dist_linux: install
 	node dist/linux.js $(ARCH) $(EXO_BROWSER) $(NO_GPG_SIGN)
 dist_darwin: install
-	node dist/darwin.js $(ARCH) $(EXO_BROWSER)
+	node dist/darwin.js $(ARCH) $(EXO_BROWSER) $(NO_GPG_SIGN)
 
 
 .PHONY: clean install dist_linux dist_darwin
